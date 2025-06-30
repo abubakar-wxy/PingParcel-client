@@ -14,12 +14,20 @@ const SocialLogin = () => {
         signInWithGoogle()
             .then((result) => {
                 const user = result.user;
+
+                // Optional: update displayName or photoURL if needed
                 updateUser({
                     displayName: user.displayName,
                     photoURL: user.photoURL,
                 })
                     .then(() => {
-                        setUser(user);
+                        setUser({
+                            ...user,
+                            displayName: user.displayName,
+                            photoURL: user.photoURL,
+                        });
+
+                        // Navigate to previous or home
                         navigate(location.state ? location.state : "/");
                     })
                     .catch((error) => {
@@ -27,10 +35,13 @@ const SocialLogin = () => {
                         setUser(user);
                         navigate(location.state ? location.state : "/");
                     });
+
+                console.log("Google login success:", user);
             })
-            .catch((error) =>
-                console.error("Google login failed:", error.code)
-            );
+            .catch((error) => {
+                const errorCode = error.code;
+                console.log("Google login failed:", errorCode);
+            });
     };
 
     return (

@@ -7,11 +7,14 @@ import rightImage from "../../assets/authImage.png";
 import PingParcelLogo from "../../shared/PingParcelLogo/PingParcelLogo";
 import { useForm } from "react-hook-form";
 import SocialLogin from "./SocialLogin";
+import useAuth from "../../hooks/useAuth";
 
 const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
+    const { loginUser, setUser } = useAuth();
+    const [nameError, setNameError] = useState("");
 
     const {
         register,
@@ -20,15 +23,17 @@ const Login = () => {
     } = useForm();
 
     const handleLogin = (data) => {
-        console.log(data);
-
-        // Example:
-        // signInUser(data.email, data.password)
-        //     .then((result) => {
-        //         setUser(result.user);
-        //         navigate(location.state?.from?.pathname || "/");
-        //     })
-        //     .catch((error) => console.log(error.message));
+        loginUser(data.email, data.password)
+            .then((result) => {
+                const user = result.user;
+                setUser(user);
+                navigate(`${location.state ? location.state : "/"}`);
+                // console.log(user);
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                setNameError(errorCode);
+            });
     };
 
     return (
@@ -95,6 +100,10 @@ const Login = () => {
                                 </p>
                             )}
                         </div>
+
+                        {nameError && (
+                            <p className="text-red-400 text-xs">{nameError}</p>
+                        )}
 
                         <button
                             type="submit"

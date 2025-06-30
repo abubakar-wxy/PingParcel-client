@@ -12,8 +12,6 @@ import SocialLogin from "./SocialLogin";
 const Register = () => {
     const [nameError, setNameError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
-    // const { createUser, setUser, updateUser, signInWithGoogle } =
-    //     useAuth(AuthProvider);
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -27,9 +25,7 @@ const Register = () => {
 
     // sign in with username and password
     const handleRegistration = (data) => {
-        createUser(data.email, data.password);
-        console
-            .log("this is from data ====== ", data)
+        createUser(data.email, data.password)
             .then((result) => {
                 const user = result.user;
                 console.log(user);
@@ -134,6 +130,10 @@ const Register = () => {
                                 </p>
                             )}
                         </div>
+
+                        {nameError && (
+                            <p className="text-red-400 text-xs">{nameError}</p>
+                        )}
 
                         <button
                             type="submit"

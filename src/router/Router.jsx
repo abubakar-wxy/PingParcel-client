@@ -5,6 +5,7 @@ import AuthLayout from "../layouts/AuthLayout";
 import Register from "../pages/Authentication/Register";
 import Login from "../pages/Authentication/Login";
 import PageNotFound from "../pages/PageNotFound";
+import PublicRoute from "./PublicRoute";
 
 export const router = createBrowserRouter([
     {
@@ -13,26 +14,38 @@ export const router = createBrowserRouter([
         children: [
             {
                 index: true,
-                element: <Home/>
-            }
-        ]
+                element: <Home />,
+            },
+            {
+                path: "/home",
+                element: <Home />,
+            },
+        ],
     },
     {
         path: "/",
-        element: <AuthLayout/>,
+        element: <AuthLayout />,
         children: [
             {
                 path: "register",
-                element: <Register/>
+                element: (
+                    <PublicRoute>
+                        <Register />
+                    </PublicRoute>
+                ),
             },
             {
                 path: "login",
-                element: <Login/>
+                element: (
+                    <PublicRoute>
+                        <Login />
+                    </PublicRoute>
+                ),
             },
-        ]
+        ],
     },
     {
         path: "*",
-        element: <PageNotFound/>
+        element: <PageNotFound />,
     },
 ]);
