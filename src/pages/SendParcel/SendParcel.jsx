@@ -88,33 +88,72 @@ const SendParcel = () => {
     };
 
     const onSubmit = (data) => {
-        const cost = calculateDeliveryCost(data);
+        const { parcelType, parcelWeight, senderRegion, receiverRegion } = data;
+        const weight = parseFloat(parcelWeight || 0);
+        const isSameRegion = senderRegion === receiverRegion;
 
+        let baseCost = 0;
+        let extraCost = 0;
+        let extraNote = "";
+        let deliveryZone = isSameRegion
+            ? "Within District"
+            : "Outside District";
+
+        // Pricing logic
+        if (parcelType === "document") {
+            baseCost = isSameRegion ? 60 : 80;
+        } else {
+            baseCost = isSameRegion ? 110 : 150;
+            if (weight > 3) {
+                extraCost = (weight - 3) * 40;
+                if (!isSameRegion) {
+                    extraCost += 40; // extra for outside delivery
+                    extraNote = `Extra charge: 40 × ${weight - 3}kg = ${
+                        (weight - 3) * 40
+                    }<br/>+ 40 extra for outside district delivery`;
+                } else {
+                    extraNote = `Extra charge: 40 × ${
+                        weight - 3
+                    }kg = ${extraCost}`;
+                }
+            }
+        }
+
+        const totalCost = baseCost + extraCost;
+
+        // SweetAlert
         Swal.fire({
-            title: `Delivery Cost: ৳${cost}`,
-            text: "Do you want to confirm and book this parcel?",
+            title: "Delivery Cost Breakdown",
+            html: `
+                <div style="text-align: left; font-size: 14px; margin-bottom: 1rem;">
+                    <strong>Parcel Type:</strong> ${parcelType}<br/>
+                    <strong>Weight:</strong> ${weight} kg<br/>
+                    <strong>Delivery Zone:</strong> ${deliveryZone}<br/><br/>
+                    <strong>Base Cost:</strong> ৳${baseCost}<br/>
+                    <strong>Extra Charges:</strong> ৳${extraCost}<br/>
+                    <small>${extraNote}</small><br/><br/>
+                    <div style="border-top: 1px solid #ccc; padding-top: 10px; font-size: 16px;">
+                        <strong style="color: green;">Total Cost: ৳${totalCost}</strong>
+                    </div>
+                </div>
+            `,
             icon: "info",
             showCancelButton: true,
-            confirmButtonText: "Confirm & Book",
-            cancelButtonText: "Cancel",
+            confirmButtonText: "💳 Proceed to Payment",
+            cancelButtonText: "✏️ Continue Editing",
             confirmButtonColor: "#16a34a",
-            cancelButtonColor: "#ef4444",
+            cancelButtonColor: "#d1d5db",
+            reverseButtons: true,
         }).then((result) => {
             if (result.isConfirmed) {
                 const parcelData = {
                     ...data,
-                    deliveryCost: cost,
+                    deliveryCost: totalCost,
                     creation_date: new Date().toISOString(),
                 };
 
                 console.log("Confirmed parcel data: ", parcelData);
-
                 saveParcelToDatabase(parcelData);
-                // Swal.fire(
-                //     "Booked!",
-                //     "Your parcel has been confirmed.",
-                //     "success"
-                // );
             }
         });
     };
