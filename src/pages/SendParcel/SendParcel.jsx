@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useLoaderData } from "react-router";
 import Swal from "sweetalert2";
@@ -20,7 +20,6 @@ const generateTrackingId = () => {
 
 const SendParcel = () => {
     const serviceCenters = useLoaderData();
-    const [isLoading, setIsLoading] = useState(false);
 
     const {
         register,
@@ -68,7 +67,6 @@ const SendParcel = () => {
 
     const saveParcelToDatabase = async (parcelData) => {
         try {
-            setIsLoading(true); // start loading
 
             const res = await axiosSecure.post("/parcels", parcelData);
 
@@ -94,8 +92,6 @@ const SendParcel = () => {
                 icon: "error",
                 confirmButtonColor: "#ef4444",
             });
-        } finally {
-            setIsLoading(false); // end loading
         }
     };
 
@@ -156,7 +152,7 @@ const SendParcel = () => {
             confirmButtonColor: "#16a34a",
             cancelButtonColor: "#d1d5db",
             reverseButtons: true,
-        }).then((result) => {
+        }).then(async (result) => {
             if (result.isConfirmed) {
                 const parcelData = {
                     ...data,
@@ -169,13 +165,25 @@ const SendParcel = () => {
                 };
 
                 console.log("Confirmed parcel data: ", parcelData);
-                saveParcelToDatabase(parcelData);
+
+                // Show SweetAlert2 loading spinner
+                Swal.fire({
+                    title: "Please wait...",
+                    html: "Booking your parcel...",
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    },
+                });
+
+                // Post to DB
+                await saveParcelToDatabase(parcelData);
             }
         });
     };
 
     return (
-        
         <div className="max-w-5xl mx-auto bg-white p-8 rounded-3xl shadow-md my-20">
             <h2 className="text-3xl font-bold text-neutral mb-8">Add Parcel</h2>
 
