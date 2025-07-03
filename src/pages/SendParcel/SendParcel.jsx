@@ -1,15 +1,26 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useLoaderData } from "react-router";
 import Swal from "sweetalert2";
+import useAuth from "../../hooks/useAuth";
+import useAxiosSecure from "../../hooks/useAxiosSecure";
 
 // Simulated user data (replace with actual auth)
 const mockUser = {
     displayName: "",
 };
 
+const generateTrackingId = () => {
+    const now = new Date();
+    const datePart = now.toISOString().slice(0, 10).replace(/-/g, ""); // YYYYMMDD
+    const timePart = now.toTimeString().slice(0, 8).replace(/:/g, ""); // HHMMSS
+    const randomPart = Math.floor(1000 + Math.random() * 9000); // 4-digit random number
+    return `TRK-${datePart}-${timePart}-${randomPart}`;
+};
+
 const SendParcel = () => {
     const serviceCenters = useLoaderData();
+    const [isLoading, setIsLoading] = useState(false);
 
     const {
         register,
@@ -17,6 +28,9 @@ const SendParcel = () => {
         watch,
         formState: { errors },
     } = useForm();
+
+    const { user } = useAuth();
+    const axiosSecure = useAxiosSecure();
 
     const parcelType = watch("parcelType", "document");
     const senderRegion = watch("senderRegion");
@@ -32,37 +46,33 @@ const SendParcel = () => {
             .map((sc) => sc.district);
     };
 
-    const calculateDeliveryCost = (data) => {
-        const sameRegion =
-            data.senderRegion &&
-            data.receiverRegion &&
-            data.senderRegion === data.receiverRegion;
+    // const calculateDeliveryCost = (data) => {
+    //     const sameRegion =
+    //         data.senderRegion &&
+    //         data.receiverRegion &&
+    //         data.senderRegion === data.receiverRegion;
 
-        if (data.parcelType === "document") {
-            return sameRegion ? 60 : 80;
-        }
+    //     if (data.parcelType === "document") {
+    //         return sameRegion ? 60 : 80;
+    //     }
 
-        const weight = parseFloat(data.parcelWeight || 0);
+    //     const weight = parseFloat(data.parcelWeight || 0);
 
-        if (weight <= 3) {
-            return sameRegion ? 110 : 150;
-        } else {
-            const extra = (weight - 3) * 40;
-            return sameRegion ? 110 + extra : 150 + extra + 40;
-        }
-    };
+    //     if (weight <= 3) {
+    //         return sameRegion ? 110 : 150;
+    //     } else {
+    //         const extra = (weight - 3) * 40;
+    //         return sameRegion ? 110 + extra : 150 + extra + 40;
+    //     }
+    // };
 
     const saveParcelToDatabase = async (parcelData) => {
         try {
-            const res = await fetch("https://your-api-url.com/parcels", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(parcelData),
-            });
+            setIsLoading(true); // start loading
 
-            if (res.ok) {
+            const res = await axiosSecure.post("/parcels", parcelData);
+
+            if (res.status === 200 || res.status === 201) {
                 Swal.fire({
                     title: "Success!",
                     text: "Parcel successfully booked!",
@@ -84,6 +94,8 @@ const SendParcel = () => {
                 icon: "error",
                 confirmButtonColor: "#ef4444",
             });
+        } finally {
+            setIsLoading(false); // end loading
         }
     };
 
@@ -149,7 +161,11 @@ const SendParcel = () => {
                 const parcelData = {
                     ...data,
                     deliveryCost: totalCost,
+                    created_by: user.email,
+                    payment_status: "unpaid",
+                    delivery_status: "not_collected",
                     creation_date: new Date().toISOString(),
+                    tracking_id: generateTrackingId(),
                 };
 
                 console.log("Confirmed parcel data: ", parcelData);
