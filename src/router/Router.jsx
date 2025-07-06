@@ -9,6 +9,10 @@ import PublicRoute from "./PublicRoute";
 import Coverage from "../pages/Coverage";
 import SendParcel from "../pages/SendParcel/SendParcel";
 import PrivateRoute from "./PrivateRoute";
+import UserParcels from "../pages/UserDashboard/UserParcels";
+import UserDashboardHome from "../pages/UserDashboard/UserDashboardHome";
+import UserDashboardLayout from "../layouts/UserDashboardLayout";
+import Payment from "../pages/UserDashboard/Payment/Payment";
 
 export const router = createBrowserRouter([
     {
@@ -58,6 +62,24 @@ export const router = createBrowserRouter([
                         <Login />
                     </PublicRoute>
                 ),
+            },
+        ],
+    },
+    {
+        path: "/userDashboard",
+        element: (
+            <PrivateRoute>
+                <UserDashboardLayout/>
+            </PrivateRoute>
+        ),
+        children: [
+            {
+                path: "/userDashboard/myParcels",
+                element: <UserParcels />,
+            },
+            {
+                path: "/userDashboard/payment/:parcelId",
+                element: <Payment/>
             },
         ],
     },

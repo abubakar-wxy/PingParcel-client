@@ -124,6 +124,15 @@ const Navbar = () => {
                                                 {user?.displayName || "User"}
                                             </a>
                                         </li>
+                                        {user && (
+                                            <>
+                                                <li>
+                                                    <Link to="/userDashboard">
+                                                        Dashboard
+                                                    </Link>
+                                                </li>
+                                            </>
+                                        )}
                                         <li>
                                             <a onClick={handleLogOut}>Logout</a>
                                         </li>
